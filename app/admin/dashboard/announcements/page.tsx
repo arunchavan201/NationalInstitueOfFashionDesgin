@@ -8,7 +8,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
 // Client-only delete button component
-function DeleteButton({ id }: { id: string }) {
+function DeleteButton({ id, setAnnouncements }: { id: string, setAnnouncements: React.Dispatch<React.SetStateAction<any[]>> }) {
   const router = useRouter()
   async function handleDelete() {
     if (!confirm("Are you sure you want to delete this announcement?")) return
@@ -16,6 +16,8 @@ function DeleteButton({ id }: { id: string }) {
       const res = await fetch(`/api/announcements?id=${id}`, { method: "DELETE" })
       const result = await res.json()
       if (result.success) {
+        // Update local state to remove the deleted announcement
+        setAnnouncements(prev => prev.filter(announcement => announcement._id !== id))
         router.refresh()
       } else {
         alert(result.error || "Failed to delete")
@@ -111,7 +113,7 @@ export default function AnnouncementsPage() {
                         <span className="sr-only">Edit</span>
                       </Link>
                     </Button>
-                    <DeleteButton id={announcement._id} />
+                    <DeleteButton id={announcement._id} setAnnouncements={setAnnouncements} />
                   </div>
                 </div>
               ))}
