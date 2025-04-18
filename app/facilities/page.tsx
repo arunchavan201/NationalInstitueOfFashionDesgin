@@ -1,23 +1,23 @@
 import Image from "next/image"
+import { headers } from "next/headers"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import clientPromise from "@/lib/mongodb"
-
-async function getFacilities() {
-  try {
-    const client = await clientPromise
-    const db = client.db("fashion_institute")
-
-    const facilities = await db.collection("facilities").find({}).sort({ order: 1 }).toArray()
-    return facilities || []
-  } catch (error) {
-    console.error("Error fetching facilities:", error)
-    return []
-  }
-}
 
 export default async function FacilitiesPage() {
-  const facilities = await getFacilities()
+  // Fetch facilities from API
+  const headersList = await headers()
+  const host = headersList.get("host")
+  const protocol = process.env.NODE_ENV === "development" ? "http" : "https"
+  const baseUrl = `${protocol}://${host}`
+  
+  let facilities = []
+  try {
+    const res = await fetch(`${baseUrl}/api/facilities`, { cache: "no-store" })
+    const data = await res.json()
+    facilities = data.data
+  } catch (error) {
+    console.error("Error fetching facilities:", error)
+  }
 
   // Default facilities if none are found in the database
   const defaultFacilities = [
@@ -65,7 +65,7 @@ export default async function FacilitiesPage() {
     },
   ]
 
-  // Use database facilities if available, otherwise use defaults
+  // Use API facilities if available, otherwise use defaults
   const allFacilities = facilities.length > 0 ? facilities : defaultFacilities
 
   return (
