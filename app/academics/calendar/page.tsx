@@ -25,7 +25,7 @@ export default async function AcademicCalendarPage() {
 
       <div className="grid md:grid-cols-2 gap-8 mb-12">
         <div>
-          <h2 className="text-2xl font-bold mb-4 text-rose-800">Academic Year 2024-25</h2>
+        
           <p className="text-gray-700 mb-6">
             The academic calendar provides important dates and schedules for the academic year, including:
           </p>
