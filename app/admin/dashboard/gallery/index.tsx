@@ -9,14 +9,34 @@ import { useToast } from "@/components/ui/use-toast"
 import { Plus, Trash2, Upload } from "lucide-react"
 import FileUpload from "@/components/ui/file-upload"
 
+// Define TypeScript interfaces
+interface GalleryImage {
+  _id: string;
+  imageId: string;
+  title?: string;
+}
+
+interface Category {
+  _id?: string;
+  id?: string;
+  name: string;
+  images: GalleryImage[];
+}
+
+interface FileData {
+  id: string;
+  filename: string;
+  url: string;
+}
+
 export default function GalleryPage() {
-  const [categories, setCategories] = useState([
+  const [categories, setCategories] = useState<Category[]>([
     { id: "days-celebrations", name: "Days & Celebrations", images: [] },
     { id: "festivals", name: "Festivals", images: [] },
     { id: "testimonials", name: "Testimonials", images: [] },
     { id: "college-glimpses", name: "College Glimpses", images: [] },
   ])
-  const [activeCategory, setActiveCategory] = useState("days-celebrations")
+  const [activeCategory, setActiveCategory] = useState<string>("days-celebrations")
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
@@ -48,7 +68,7 @@ export default function GalleryPage() {
     fetchGallery()
   }, [toast])
 
-  const handleImageUpload = async (fileData) => {
+  const handleImageUpload = async (fileData: FileData) => {
     if (!activeCategory) {
       toast({
         title: "Error",
@@ -104,7 +124,7 @@ export default function GalleryPage() {
         title: "Success",
         description: "Image uploaded to gallery successfully",
       })
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "An error occurred",
@@ -113,7 +133,7 @@ export default function GalleryPage() {
     }
   }
 
-  const handleDeleteImage = async (imageId) => {
+  const handleDeleteImage = async (imageId: string) => {
     if (!confirm("Are you sure you want to delete this image?")) return
 
     try {
@@ -142,7 +162,7 @@ export default function GalleryPage() {
         title: "Success",
         description: "Image deleted successfully",
       })
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "An error occurred",
@@ -177,22 +197,29 @@ export default function GalleryPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-4">
             <div>
               <CardTitle>Gallery Categories</CardTitle>
               <CardDescription>Manage images in different categories</CardDescription>
             </div>
-            <Button variant="outline" className="flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              <FileUpload type="image" onUploadComplete={handleImageUpload} maxSizeMB={5} buttonText="Upload Image" />
-            </Button>
+            <div>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                <FileUpload 
+                  type="image" 
+                  onUploadComplete={handleImageUpload} 
+                  maxSizeMB={5} 
+                  buttonText="Upload Image" 
+                />
+              </Button>
+            </div>
           </div>
           <TabsList className="grid grid-cols-2 md:grid-cols-4">
             {categories.map((category) => (
               <TabsTrigger
                 key={category._id || category.id}
-                value={category._id || category.id}
-                onClick={() => setActiveCategory(category._id || category.id)}
+                value={category._id || category.id || ''}
+                onClick={() => setActiveCategory(category._id || category.id || '')}
               >
                 {category.name}
               </TabsTrigger>

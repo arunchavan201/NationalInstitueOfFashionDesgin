@@ -8,9 +8,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Plus, Edit, Trash2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
+// Define types
+interface Facility {
+  _id: string;
+  id?: string;
+  name: string;
+  description: string;
+  images?: string[];
+  features?: string[];
+  order?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  data: Facility[];
+  error?: string;
+}
+
 export default function FacilitiesPage() {
-  const [facilities, setFacilities] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [facilities, setFacilities] = useState<Facility[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -18,7 +37,7 @@ export default function FacilitiesPage() {
       try {
         const response = await fetch("/api/facilities")
         if (response.ok) {
-          const data = await response.json()
+          const data: ApiResponse = await response.json()
           setFacilities(data.data || [])
         } else {
           throw new Error("Failed to fetch facilities")
@@ -38,7 +57,7 @@ export default function FacilitiesPage() {
     fetchFacilities()
   }, [toast])
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this facility?")) return
 
     try {
@@ -47,7 +66,8 @@ export default function FacilitiesPage() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to delete facility")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to delete facility")
       }
 
       setFacilities(facilities.filter((facility) => facility._id !== id))
@@ -56,7 +76,7 @@ export default function FacilitiesPage() {
         title: "Success",
         description: "Facility deleted successfully",
       })
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "An error occurred",
@@ -95,7 +115,7 @@ export default function FacilitiesPage() {
         <CardContent>
           {facilities.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {facilities.map((facility) => (
+              {facilities.map((facility: Facility) => (
                 <div key={facility._id} className="flex p-4 border rounded-lg">
                   <div className="relative h-20 w-20 rounded-md overflow-hidden mr-4 flex-shrink-0">
                     <Image

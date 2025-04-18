@@ -1,26 +1,28 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Image from "next/image"
-import { headers } from "next/headers"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export default async function FacilitiesPage() {
-  // Fetch facilities from API
-  const headersList = await headers()
-  const host = headersList.get("host")
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https"
-  const baseUrl = `${protocol}://${host}`
-  
-  let facilities = []
-  try {
-    const res = await fetch(`${baseUrl}/api/facilities`, { cache: "no-store" })
-    const data = await res.json()
-    facilities = data.data
-  } catch (error) {
-    console.error("Error fetching facilities:", error)
-  }
+// Define the Facility interface
+interface Facility {
+  id: string;
+  _id?: string;
+  name: string;
+  description: string | React.ReactNode;
+  images: string[];
+  features?: string[];
+  order?: number;
+}
+
+export default function FacilitiesPage() {
+  const [facilities, setFacilities] = useState<Facility[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Default facilities if none are found in the database
-  const defaultFacilities = [
+  const defaultFacilities: Facility[] = [
     {
       id: "design-studio",
       name: "Design Studios",
@@ -65,8 +67,49 @@ export default async function FacilitiesPage() {
     },
   ]
 
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/facilities')
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch facilities')
+        }
+        
+        const data = await response.json()
+        if (data.success && data.data && data.data.length > 0) {
+          // Make sure each facility has an id property
+          const facilitiesWithIds: Facility[] = data.data.map((facility: any) => ({
+            ...facility,
+            id: facility.id || facility._id || `facility-${Math.random().toString(36).substr(2, 9)}`
+          }))
+          setFacilities(facilitiesWithIds)
+        } else {
+          setFacilities([])
+        }
+      } catch (err: unknown) {
+        console.error("Error fetching facilities:", err)
+        setError(err instanceof Error ? err.message : 'An unknown error occurred')
+        setFacilities([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFacilities()
+  }, [])
+
   // Use API facilities if available, otherwise use defaults
-  const allFacilities = facilities.length > 0 ? facilities : defaultFacilities
+  const allFacilities: Facility[] = facilities.length > 0 ? facilities : defaultFacilities
+
+  if (loading) {
+    return <div className="container mx-auto px-4 py-12 text-center">Loading facilities...</div>
+  }
+
+  if (error) {
+    return <div className="container mx-auto px-4 py-12 text-center text-red-500">Error: {error}</div>
+  }
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -74,25 +117,42 @@ export default async function FacilitiesPage() {
 
       <Tabs defaultValue={allFacilities[0]?.id || "design-studio"} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 mb-8">
-          {allFacilities.map((facility) => (
+          {allFacilities.map((facility: Facility) => (
             <TabsTrigger key={facility.id} value={facility.id}>
               {facility.name}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {allFacilities.map((facility) => (
+        {allFacilities.map((facility: Facility) => (
           <TabsContent key={facility.id} value={facility.id} className="mt-6">
             <Card>
               <CardContent className="p-6">
                 <div className="grid md:grid-cols-2 gap-8 items-center">
                   <div className="relative h-[300px] rounded-lg overflow-hidden">
-                    <Image
-                      src={facility.images?.[0] || "/placeholder.svg?height=300&width=500"}
-                      alt={facility.name}
-                      fill
-                      className="object-cover"
-                    />
+                    {facility.images && facility.images[0] ? (
+                      <Image
+                        src={
+                          // Check if image is an ID (not a URL/path)
+                          !facility.images[0].startsWith('/') && !facility.images[0].startsWith('http')
+                            ? `/api/files/${facility.images[0]}`
+                            : facility.images[0]
+                        }
+                        alt={facility.name}
+                        fill
+                        className="object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "/placeholder.svg?height=300&width=500"
+                        }}
+                      />
+                    ) : (
+                      <Image
+                        src="/placeholder.svg?height=300&width=500"
+                        alt={facility.name}
+                        fill
+                        className="object-cover"
+                      />
+                    )}
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold mb-4">{facility.name}</h2>
@@ -100,7 +160,7 @@ export default async function FacilitiesPage() {
                       {typeof facility.description === "string" ? (
                         <p>{facility.description}</p>
                       ) : (
-                        <div dangerouslySetInnerHTML={{ __html: facility.description || "" }} />
+                        <div dangerouslySetInnerHTML={{ __html: facility.description as string || "" }} />
                       )}
                     </div>
 
@@ -108,7 +168,7 @@ export default async function FacilitiesPage() {
                       <div className="mt-6">
                         <h3 className="text-lg font-semibold mb-2">Features:</h3>
                         <ul className="list-disc pl-5 space-y-1">
-                          {facility.features.map((feature, index) => (
+                          {facility.features.map((feature: string, index: number) => (
                             <li key={index}>{feature}</li>
                           ))}
                         </ul>
@@ -121,13 +181,21 @@ export default async function FacilitiesPage() {
                   <div className="mt-8">
                     <h3 className="text-lg font-semibold mb-4">More Images</h3>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {facility.images.slice(1).map((image, index) => (
+                      {facility.images.slice(1).map((image: string, index: number) => (
                         <div key={index} className="relative h-40 rounded-lg overflow-hidden">
                           <Image
-                            src={image || "/placeholder.svg"}
+                            src={
+                              // Check if image is an ID (not a URL/path)
+                              !image.startsWith('/') && !image.startsWith('http')
+                                ? `/api/files/${image}`
+                                : image
+                            }
                             alt={`${facility.name} image ${index + 2}`}
                             fill
                             className="object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = "/placeholder.svg"
+                            }}
                           />
                         </div>
                       ))}

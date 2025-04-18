@@ -91,23 +91,7 @@ export default async function LibraryPage() {
      
       </div>
 
-      <Card className="mb-12 overflow-hidden border-rose-100 hover:shadow-lg transition-shadow">
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="flex-shrink-0 bg-rose-100 p-4 rounded-full">
-              <Search className="h-8 w-8 text-rose-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold mb-2 text-rose-800">Online Catalog</h2>
-              <p className="text-gray-700 mb-4">
-                Search our online catalog to find books, journals, and other resources available in our library. You can
-                check availability, place holds, and renew borrowed items through our online system.
-              </p>
-              <Button className="bg-rose-600 hover:bg-rose-700">Access Online Catalog</Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+     
 
       <h2 className="text-2xl font-bold mb-6 text-rose-800">Library Resources</h2>
 

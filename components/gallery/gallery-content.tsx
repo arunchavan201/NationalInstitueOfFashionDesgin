@@ -133,7 +133,7 @@ export function GalleryContent() {
                         src={`/api/files/${image.imageId}`}
                         alt={image.title || "Gallery Image"}
                         fill
-                        className="object-cover"
+                        className="object-contain"
                       />
                     </div>
                     {(image.title || image.description) && (
