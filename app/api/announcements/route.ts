@@ -2,99 +2,146 @@ import { NextResponse } from "next/server"
 import clientPromise from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
 
-// Simple admin authentication middleware
-async function isAuthenticated(request: Request) {
-  // In a real application, you would check for a valid session or token
-  // For this simplified version, we'll just check if the request includes an admin header
-  const adminHeader = request.headers.get("x-admin-auth")
-  return adminHeader === "true"
+// Response helper function
+function createResponse(success: boolean, data?: any, statusCode = 200, error?: string) {
+  return NextResponse.json(
+    {
+      success,
+      ...(data && { data }),
+      ...(error && { error })
+    },
+    { 
+      status: statusCode, 
+      headers: { 
+        "Cache-Control": "no-store, max-age=0",
+        "Content-Type": "application/json"
+      } 
+    }
+  )
 }
 
+// Get all active announcements
 export async function GET() {
   try {
     const client = await clientPromise
     const db = client.db("fashion_institute")
-
+    
+    // Get all active announcements
     const announcements = await db
       .collection("announcements")
       .find({ isActive: true })
       .sort({ createdAt: -1 })
       .toArray()
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: announcements,
-      },
-      { headers: { "Cache-Control": "no-store" } }
-    )
+    return createResponse(true, announcements)
   } catch (error) {
     console.error("Database error:", error)
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch announcements" },
-      { status: 500, headers: { "Cache-Control": "no-store" } }
-    )
+    return createResponse(false, null, 500, "Failed to fetch announcements")
   }
 }
 
+// Create new announcement
 export async function POST(request: Request) {
   try {
-    // For admin operations, we would normally check authentication
-    // Since we're using a simplified approach, we'll skip this check for now
-
     const { text, link, isActive = true } = await request.json()
 
     // Validate input
     if (!text || text.trim() === "") {
-      return NextResponse.json({ success: false, error: "Announcement text is required" }, { status: 400 })
+      return createResponse(false, null, 400, "Announcement text is required")
     }
 
     const client = await clientPromise
     const db = client.db("fashion_institute")
 
-    const result = await db.collection("announcements").insertOne({
+    // Create new announcement
+    const newAnnouncement = {
       text,
       link,
       isActive,
       createdAt: new Date(),
       updatedAt: new Date(),
-    })
+    }
+    
+    const result = await db.collection("announcements").insertOne(newAnnouncement)
 
-    return NextResponse.json(
+    return createResponse(
+      true, 
       {
-        success: true,
-        data: {
-          _id: result.insertedId,
-          text,
-          link,
-          isActive,
-        },
-      },
-      { status: 201 },
+        _id: result.insertedId,
+        ...newAnnouncement,
+      }, 
+      201
     )
   } catch (error) {
     console.error("Database error:", error)
-    return NextResponse.json({ success: false, error: "Failed to create announcement" }, { status: 500 })
+    return createResponse(false, null, 500, "Failed to create announcement")
   }
 }
 
+// Delete an announcement
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
+    
     if (!id) {
-      return NextResponse.json({ success: false, error: "Missing announcement id" }, { status: 400 })
+      return createResponse(false, null, 400, "Missing announcement id")
     }
+    
     const client = await clientPromise
     const db = client.db("fashion_institute")
-    const result = await db.collection("announcements").deleteOne({ _id: new ObjectId(id) })
+    
+    const result = await db.collection("announcements").deleteOne({ 
+      _id: new ObjectId(id) 
+    })
+    
     if (result.deletedCount === 1) {
-      return NextResponse.json({ success: true, data: { deletedCount: result.deletedCount } })
+      return createResponse(true, { deletedCount: result.deletedCount })
     } else {
-      return NextResponse.json({ success: false, error: "Announcement not found" }, { status: 404 })
+      return createResponse(false, null, 404, "Announcement not found")
     }
   } catch (error) {
     console.error("Delete error:", error)
-    return NextResponse.json({ success: false, error: "Failed to delete announcement" }, { status: 500 })
+    return createResponse(false, null, 500, "Failed to delete announcement")
+  }
+}
+
+// Update an announcement
+export async function PUT(request: Request) {
+  try {
+    const { id, text, link, isActive } = await request.json()
+    
+    if (!id) {
+      return createResponse(false, null, 400, "Announcement ID is required")
+    }
+    
+    if (!text && link === undefined && isActive === undefined) {
+      return createResponse(false, null, 400, "No fields to update")
+    }
+    
+    const client = await clientPromise
+    const db = client.db("fashion_institute")
+    
+    const updateData: Record<string, any> = {
+      updatedAt: new Date()
+    }
+    
+    if (text !== undefined) updateData.text = text
+    if (link !== undefined) updateData.link = link
+    if (isActive !== undefined) updateData.isActive = isActive
+    
+    const result = await db.collection("announcements").updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updateData }
+    )
+    
+    if (result.matchedCount === 0) {
+      return createResponse(false, null, 404, "Announcement not found")
+    }
+    
+    return createResponse(true, { modifiedCount: result.modifiedCount })
+  } catch (error) {
+    console.error("Update error:", error)
+    return createResponse(false, null, 500, "Failed to update announcement")
   }
 }

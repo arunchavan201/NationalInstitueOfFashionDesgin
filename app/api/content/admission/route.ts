@@ -23,15 +23,35 @@ export async function GET() {
     const client = await clientPromise
     const db = client.db("fashion_institute")
 
+    // Add cache control headers
+    const headers = {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
+
     const content = await db.collection<AdmissionContent>("content").findOne({ section: "admission" })
 
     return NextResponse.json({
       success: true,
       data: content || {},
-    })
+    }, { headers })
   } catch (error) {
     console.error("Database error:", error)
-    return NextResponse.json({ success: false, error: "Failed to fetch admission content" }, { status: 500 })
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: "Failed to fetch admission content" 
+      }, 
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      }
+    )
   }
 }
 

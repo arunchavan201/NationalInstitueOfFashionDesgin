@@ -10,20 +10,31 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      data: content,
+      data: content || { institute: "", society: "", vision: "", mission: "" },
     })
   } catch (error) {
     console.error("Database error:", error)
-    return NextResponse.json({ success: false, error: "Failed to fetch about content" }, { status: 500 })
+    return NextResponse.json({ 
+      success: false, 
+      error: "Failed to fetch about content",
+      message: error instanceof Error ? error.message : "Unknown error" 
+    }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // In a real application with proper authentication, we would check for admin privileges here
-    // Since we're using a simplified approach with client-side authentication, we'll skip this check
+    const data = await request.json()
+    
+    // Validate required fields
+    if (!data.institute || !data.society) {
+      return NextResponse.json({
+        success: false,
+        error: "Institute and society information are required"
+      }, { status: 400 })
+    }
 
-    const { institute, society, vision, mission } = await request.json()
+    const { institute, society, vision, mission } = data
 
     const client = await clientPromise
     const db = client.db("fashion_institute")
@@ -46,9 +57,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "About content updated successfully",
+      modifiedCount: result.modifiedCount,
+      upsertedId: result.upsertedId,
     })
   } catch (error) {
     console.error("Database error:", error)
-    return NextResponse.json({ success: false, error: "Failed to update about content" }, { status: 500 })
+    return NextResponse.json({ 
+      success: false, 
+      error: "Failed to update about content",
+      message: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 })
   }
 }

@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useState } from "react"
 import { Megaphone } from "lucide-react"
+import { motion } from "framer-motion"
 
 interface Announcement {
   _id: string
@@ -15,36 +16,11 @@ interface AnnouncementsProps {
 }
 
 export default function Announcements({ announcements }: AnnouncementsProps) {
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const [activeAnnouncements, setActiveAnnouncements] = useState<Announcement[]>([])
 
   useEffect(() => {
-    if (!scrollRef.current || announcements.length === 0) return
-
-    const scrollElement = scrollRef.current
-    let animationId: number
-    let position = 0
-
-    const scroll = () => {
-      if (!scrollElement) return
-
-      position -= 1
-      scrollElement.style.transform = `translateX(${position}px)`
-
-      // Reset position when the first announcement is completely out of view
-      if (Math.abs(position) >= scrollElement.children[0].clientWidth) {
-        position = 0
-        // Move the first child to the end
-        scrollElement.appendChild(scrollElement.children[0])
-        scrollElement.style.transform = `translateX(${position}px)`
-      }
-
-      animationId = requestAnimationFrame(scroll)
-    }
-
-    animationId = requestAnimationFrame(scroll)
-
-    return () => {
-      cancelAnimationFrame(animationId)
+    if (announcements && announcements.length > 0) {
+      setActiveAnnouncements(announcements.filter((a) => a.isActive))
     }
   }, [announcements])
 
@@ -52,25 +28,50 @@ export default function Announcements({ announcements }: AnnouncementsProps) {
     return null
   }
 
-  const activeAnnouncements = announcements.filter((a) => a.isActive)
-
   if (activeAnnouncements.length === 0) {
     return null
   }
 
   return (
-    <div className="bg-rose-600 text-white py-3 overflow-hidden">
+    <motion.div 
+      className="bg-gradient-to-r from-rose-700 to-rose-500 text-white py-3 overflow-hidden shadow-lg"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="container mx-auto px-4 flex items-center">
-        <div className="flex-shrink-0 flex items-center mr-4">
+        <motion.div 
+          className="flex-shrink-0 flex items-center mr-4"
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
           <Megaphone className="h-5 w-5 mr-2" />
           <span className="font-medium">Announcements:</span>
-        </div>
+        </motion.div>
         <div className="overflow-hidden relative flex-1">
-          <div ref={scrollRef} className="flex whitespace-nowrap" style={{ willChange: "transform" }}>
+          <motion.div 
+            className="flex"
+            animate={{ 
+              x: [0, -1000],
+              transition: { 
+                x: { 
+                  repeat: Infinity, 
+                  duration: 20, 
+                  ease: "linear" 
+                }
+              }
+            }}
+          >
             {activeAnnouncements.map((announcement) => (
-              <div key={announcement._id} className="inline-block px-4 whitespace-nowrap">
+              <div key={announcement._id} className="inline-block px-4 mr-8 whitespace-nowrap">
                 {announcement.link ? (
-                  <a href={announcement.link} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                  <a 
+                    href={announcement.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="hover:underline transition-all duration-300 hover:text-white/90"
+                  >
                     {announcement.text}
                   </a>
                 ) : (
@@ -78,9 +79,26 @@ export default function Announcements({ announcements }: AnnouncementsProps) {
                 )}
               </div>
             ))}
-          </div>
+            {/* Duplicate announcements for seamless loop */}
+            {activeAnnouncements.map((announcement) => (
+              <div key={`dup-${announcement._id}`} className="inline-block px-4 mr-8 whitespace-nowrap">
+                {announcement.link ? (
+                  <a 
+                    href={announcement.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="hover:underline transition-all duration-300 hover:text-white/90"
+                  >
+                    {announcement.text}
+                  </a>
+                ) : (
+                  <span>{announcement.text}</span>
+                )}
+              </div>
+            ))}
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
