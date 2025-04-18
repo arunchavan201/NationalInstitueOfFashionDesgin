@@ -18,7 +18,7 @@ const slides = [
   },
   {
     id: 2,
-    image: "/placeholder.svg?height=600&width=1200",
+    image: "/image5.png",
     title: "Learn from Industry Experts",
     description: "Our faculty brings years of professional experience to the classroom",
     cta: "Meet Our Faculty",
@@ -26,7 +26,7 @@ const slides = [
   },
   {
     id: 3,
-    image: "/placeholder.svg?height=600&width=1200",
+    image: "/image6.png",
     title: "State-of-the-Art Facilities",
     description: "Access to modern design studios and cutting-edge technology",
     cta: "View Facilities",
