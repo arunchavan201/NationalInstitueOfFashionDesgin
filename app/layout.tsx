@@ -14,9 +14,18 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
   title: "National Institute of Fashion Designing, Kasar Sirsi",
-  description: "Affiliated to S.N.D.T.W University, Mumbai - Premier fashion design education",
-  keywords: "fashion design, institute, education, design courses, SNDTW University, fashion career, design school",
-  generator: 'v0.dev'
+  description: "Affiliated to S.N.D.T.W University, Mumbai - Premier fashion design education in Nilanga and Kasar Sirsi, Latur",
+  keywords: "fashion design, institute, education, design courses, SNDTW University, fashion career, design school, Nilanga, Kasar Sirsi, Latur",
+  generator: 'v0.dev',
+  metadataBase: new URL('https://www.nationalinstituteoffashiondesigning.org/'),
+  icons: {
+    icon: '/logo.svg',
+    shortcut: '/logo.svg',
+    apple: '/logo.svg',
+  },
+  openGraph: {
+    images: '/logo.svg',
+  },
 }
 
 export default function RootLayout({
