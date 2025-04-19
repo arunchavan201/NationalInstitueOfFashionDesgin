@@ -31,14 +31,27 @@ export default function ContactPage() {
     setIsSubmitting(true)
     setFormError(null)
     
-    // Simulate form submission
     try {
-      // You can replace this with an actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // Send the form data to our API route
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formState),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send message');
+      }
+      
       setIsSubmitted(true)
       setFormState({ name: "", email: "", subject: "", message: "" })
     } catch (error) {
-      setFormError("There was an error sending your message. Please try again.")
+      console.error('Error:', error);
+      setFormError("There was an error sending your message. Please try again.");
     } finally {
       setIsSubmitting(false)
     }
