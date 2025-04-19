@@ -239,7 +239,7 @@ export function GalleryContent() {
                               src={`/api/files/${image.imageId}`}
                               alt={image.title || "Gallery Image"}
                               fill
-                              className="object-cover transition-transform duration-500 group-hover:scale-105"
+                              className="object-contain transition-transform duration-500 group-hover:scale-105"
                               onError={(e) => {
                                 e.currentTarget.src = "/placeholder.svg?height=300&width=500&text=Image"
                               }}
