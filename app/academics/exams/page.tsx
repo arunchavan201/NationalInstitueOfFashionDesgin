@@ -303,7 +303,7 @@ export default function ExamsPage() {
                       <p className="text-gray-700 mt-2">
                         <span className="font-medium">Email:</span> exam@nifd.edu
                         <br />
-                        <span className="font-medium">Phone:</span> +91 9974469124
+                        <span className="font-medium">Phone:</span> +91 9975469123
                       </p>
                     </motion.div>
                   </CardContent>

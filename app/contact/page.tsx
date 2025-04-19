@@ -89,7 +89,7 @@ export default function ContactPage() {
               content: (
                 <>
                   <a href="tel:+919974469124" className="text-blue-600 hover:underline">
-                    +91 9974469124
+                    +91 9975469123
                   </a>
                   <a href="tel:+918411888688" className="text-blue-600 hover:underline mt-1">
                     +91 8411888688

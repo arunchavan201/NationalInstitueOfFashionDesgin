@@ -253,7 +253,7 @@ export default function SyllabusPage() {
             </motion.div>
             <motion.div variants={item}>
               <div className="bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all">
-                <span className="font-medium text-rose-600">Phone:</span> +91 9974469124
+                <span className="font-medium text-rose-600">Phone:</span> +91 9975469123
               </div>
             </motion.div>
           </motion.div>
